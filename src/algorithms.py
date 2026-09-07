@@ -188,6 +188,123 @@ def compute_extended_eci(
 
     return complexity, fitness, CQ, Delta
 
+
+def compute_extended_eci_with_imports(
+    Mcp_export: pd.DataFrame,
+    Mcp_import: pd.DataFrame,
+    C: pd.DataFrame,
+    delta_window: int = 1,
+    max_iter: int = 1000,
+    tol: float = 1e-6,
+):
+    """
+    ECI esteso con import (stessa logica tensoriale di
+    compute_extended_fitness_with_imports, ma con le equazioni ECI:
+        F     = D^-1 (M_export Q - import_penalty)
+        Delta = U^-1 M_export^T F
+        Q     = C Q + Delta
+    
+    """
+
+    # 0) Gestione INPUT
+    
+    # 0.1) Matrici
+    # qui prende float ma nel caso binarizzato in realtà si tratta di int
+    M_export = Mcp_export.values.astype(float)
+    M_import = Mcp_import.values.astype(float)
+    C = C.values.astype(float)
+    n_c, n_p = Mcp_export.shape
+
+    # 0.2) Calcolo diversity e ubiquity 
+    diversification = M_export.sum(axis=1)
+    ubiquity = M_export.sum(axis=0)
+
+    D_inv = np.divide(1.0, diversification,
+                       out=np.zeros_like(diversification), where=diversification != 0)
+    U_inv = np.divide(1.0, ubiquity,
+                       out=np.zeros_like(ubiquity), where=ubiquity != 0)
+
+    
+    # 1) Creazione Tensori
+    
+    # 1.a) Tensore con C
+    C_tensor = np.zeros((n_p, n_p, delta_window))
+    C_k = C.copy()
+    for k in range(delta_window):
+        C_tensor[:, :, k] = C_k
+        C_k = C_k @ C
+    
+    # 1.b) Tensore con Mcp (export e import)
+    M_import_tensor = np.repeat(M_import[:, :, np.newaxis], delta_window, axis=2)
+    M_export_tensor = np.repeat(M_export[:, :, np.newaxis], delta_window, axis=2)
+
+    
+    # 2) Algoritmo
+    
+    # 2.1) Inizializzazione
+    F     = np.ones(n_c)
+    Q     = np.ones(n_p)
+    Delta = np.ones((n_c, n_p, delta_window))
+    
+    # 2.2) Sistema dinamico
+    for _ in range(max_iter):
+        F_old = F.copy()
+        Q_old = Q.copy()
+
+        # 2.2.1) ECI 
+        # 2.2.1.a) Calcolo import penalty
+        k = 0
+        eci_imported_input_penalty = 0
+        for k in range(delta_window):
+
+            # FILTRO 1: import
+            import_filtered = Delta[:, :, k] * M_import_tensor[:, :, k]
+            # Per ogni prodotto (e paese e ordine di distanza) prendo i delta importati
+            input_imported = import_filtered @ C_tensor[:, :, k]
+            # FILTRO 2: export
+            export_filtered = (input_imported * M_export_tensor[:, :, k])
+            # export_filtered: mi dice per ogni prodotto p ESPORTATO dal paese c la somma delle complessità degli input importati
+            # per calcolare lo sconto alla fitness devo sommare:
+            # a) su tutti i prodotti
+            export_filtered = export_filtered.sum(axis=1)
+            # b) su tutti gli ordini di distanza
+            eci_imported_input_penalty += export_filtered
+        
+        F = D_inv * (M_export @ Q_old - eci_imported_input_penalty)
+
+        # 2.2.2) Complessità intrinseca Delta
+        Delta_new = U_inv * (M_export.T @ F_old)
+        mean_Delta_new = np.mean(Delta_new)
+        Delta_new = Delta_new / mean_Delta_new
+        
+        # 2.2.3) Complessità totale Q
+        CQ = C @ Q
+        Q  = CQ + Delta_new
+        
+        # 2.3) Normalizzazione
+        mean_Q    = np.mean(Q)
+        F         = F / mean_Q
+        CQ        = CQ / mean_Q
+        Q         = Q / mean_Q
+        
+        
+        # 2.4) Procedura Delta
+
+        # shifto (lasciando vuota la posizione 0) e normalizzo
+        Delta[:, :, 1:] = Delta[:, :, :-1] / mean_Q
+
+        # fillo la posizione 0 con il valore di delta_new
+        Delta[:, :, 0] = Delta_new / mean_Q
+       # 3) Convergenza
+        if np.all(np.abs(F - F_old) < tol) and np.all(np.abs(Q - Q_old) < tol):
+            break
+    fitness              = pd.Series(F,         index=Mcp_export.index,   name="Fitness")
+    complexity           = pd.Series(Q,         index=Mcp_export.columns, name="Complexity")
+    input_complexity     = pd.Series(CQ,        index=Mcp_export.columns, name="Input Complexity")
+    intrinsic_complexity = pd.Series(Delta_new, index=Mcp_export.columns, name="Intrinsic Complexity")
+
+    return complexity, fitness, input_complexity, intrinsic_complexity
+
 #-----------------------------------------------------------------------------------------------------------------------------------
 
 
