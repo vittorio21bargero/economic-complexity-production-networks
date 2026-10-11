@@ -88,7 +88,7 @@ one complexity metric is added (mean N₁ = average number of inputs of the expo
 ├── notebooks/
 │   ├── data_generation/           run the algorithms and save results (stability, convergence, metrics by year)
 │   ├── plotting/                  thesis figures from the saved results
-│   ├── econometria/               growth regressions, external validation, effect of the import filter
+│   ├── econometrics/              growth regressions, external validation, effect of the import filter
 │   └── archive/                   early exploration, kept for reference
 ├── scripts/readme_figures.py      figures of this README
 └── docs/figures/

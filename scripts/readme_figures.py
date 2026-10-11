@@ -3,9 +3,9 @@ Figures for the README (English labels), saved as PNG in docs/figures/.
 
 They reuse results already produced by the notebooks:
 - results/stability/C/extended_fitness_with_imports/   (notebooks/data_generation/C_stability.ipynb)
-- results/econometria/regressioni/regressioni.csv       (notebooks/econometria/econometria_paesi.ipynb)
+- results/econometria/regressioni/regressioni.csv       (notebooks/econometrics/growth_regressions.ipynb)
 and recompute Extended Fitness with and without the import filter for a single year
-(as in notebooks/econometria/effetto_import.ipynb), which needs the data in data/.
+(as in notebooks/econometrics/import_filter_effect.ipynb), which needs the data in data/.
 
 Run from the repository root:  python scripts/readme_figures.py
 """
