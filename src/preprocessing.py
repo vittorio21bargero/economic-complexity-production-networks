@@ -10,6 +10,8 @@ import re
 import zipfile
 from pathlib import Path
 
+ROOT = Path(__file__).resolve().parents[1]  # repository root
+
 
 
 #  1) BACI / Mcp processing
@@ -492,7 +494,7 @@ def run_pipeline_all_years(
         Mcp = pipeline(M, C, BACI)
         
         # salvataggio (opzionale)
-        Mcp.to_parquet(rf'C:\Users\vitto\Desktop\CSH RESEARCH\data\HS02_all_years\6_digits\Mcp_export_non_binarized_alligned\Mcp_export_alligned_Y{year}.parquet')
+        Mcp.to_parquet(ROOT / "data" / "HS02_all_years" / "6_digits" / "Mcp_export_non_binarized_alligned" / f"Mcp_export_alligned_Y{year}.parquet")
 
 
     return Mcp
