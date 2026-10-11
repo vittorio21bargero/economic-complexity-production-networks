@@ -11,6 +11,7 @@ data/
 experiments/
 papers/
 results/
+figures/
 theory/
 varie/
 
@@ -19,3 +20,8 @@ varie/
 
 
 
+
+# thesis text, private notes, PDF plots (README figures are in docs/figures)
+latex/
+plots/
+riassunti_lavoro_svolto/

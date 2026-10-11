@@ -18,7 +18,7 @@ ROOT = Path().resolve().parent
 sys.path.insert(0, str(ROOT))
 
 
-from src.C_properties import is_C_nilpotente, autovettore_and_autovalore_principale
+from src.C_properties import is_C_nilpotente, autovettore_and_autovalore_principale, indegree_medio
 
 # In[4]:
 
@@ -85,10 +85,16 @@ def compute_eci(Mcp: pd.DataFrame):
     # A) ECI ---> mi interessa il 2° autovettore
     eci = np.real(eigvecs[:, 1])
     eci = (eci - np.mean(eci)) / np.std(eci)    # Standardizzazione eci (media 0, varianza 1)
+    # il segno di un autovettore e' arbitrario (e puo' cambiare da un anno all'altro); ECI = k_c^-1 M PCI
+    # non lo fissa, perche' cambiando segno a ECI cambia segno anche PCI. Convenzione dell'Atlas
+    # (e di py-ecomplexity): segno tale che ECI sia correlato positivamente con la diversificazione
+    # sull'insieme dei paesi. Non impone che ECI cresca con k_c paese per paese.
+    if np.corrcoef(eci, k_c)[0, 1] < 0:
+        eci = -eci
 
     # B) PCI
-    # Proiezione sui prodotti
-    pci = (M.T / kc[None, :]) @ eci
+    # Proiezione sui prodotti: PCI_p = (1/k_p) sum_c M_cp ECI_c
+    pci = (M.T / k_p[:, None]) @ eci
     pci = (pci - np.mean(pci)) / np.std(pci)    # Standardizzazione pci (media 0, varianza 1)
 
    
@@ -129,7 +135,7 @@ def compute_fitness(Mcp: pd.DataFrame, max_iter: int = 1000, tol: float = 1e-6,
     F = np.ones(n_c)
     Q = np.ones(n_p)
 
-    history = [] if track else None
+    history = [] if track_convergence else None
     converged = False
     i = 0
 
@@ -164,7 +170,7 @@ def compute_fitness(Mcp: pd.DataFrame, max_iter: int = 1000, tol: float = 1e-6,
     fitness = pd.Series(F, index=Mcp.index, name="Fitness")
     complexity = pd.Series(Q, index=Mcp.columns, name="Complexity")
 
-    if track:
+    if track_convergence:
         info_convergence = {
             "history": np.array(history),
             "n_iter": i,
