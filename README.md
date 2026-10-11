@@ -75,58 +75,26 @@ one complexity metric is added (mean N₁ = average number of inputs of the expo
 ## Repository structure
 
 ```
-├── src/
-│   ├── algorithms.py              ECI, Fitness and their extensions without the import filter
-│   ├── algorithms_with_imports.py Extended ECI / Extended Fitness with the import filter (core of the thesis)
-│   ├── preprocessing.py           from BACI trade flows and AIPnet to the binary matrices M^E, M^I, C
-│   ├── C_properties.py            spectral radius, nilpotency and mean in-degree of the production network
-│   ├── matrix_perturbations.py    null models: rewiring of C, perturbation of the country-product matrices
-│   ├── C_alberizzazione.py        removal of feedback arcs (acyclic, nilpotent C)
-│   ├── econometrics.py            OLS with clustered standard errors for the growth regressions
-│   ├── storage.py, plotting.py    I/O of results, common plotting style
-│   └── analysis.py, mixed_functions.py   accessory / experimental helpers
-├── notebooks/
-│   ├── data_generation/           run the algorithms and save results (stability, convergence, metrics by year)
-│   ├── plotting/                  thesis figures from the saved results
-│   ├── econometrics/              growth regressions, external validation, effect of the import filter
-│   └── archive/                   early exploration, kept for reference
-├── scripts/readme_figures.py      figures of this README
-└── docs/figures/
+src/                          algorithms and data pipeline
+  algorithms_with_imports.py  Extended ECI / Fitness with import filter (core)
+  algorithms.py               classical ECI, Fitness, extensions without filter
+  preprocessing.py            from raw trade data to the input matrices
+notebooks/
+  data_generation/            run the algorithms, save results
+  plotting/                   thesis figures
+  econometrics/               growth regressions, external validation
+  archive/                    early exploration
+scripts/                      figures of this README
 ```
 
-The core algorithms are in `src/`; notebooks are research logs, with comments in Italian.
+Notebooks are research logs, with comments in Italian.
 
-## Data
+## Reproducibility
 
-The data are not included because of their size and licences. The pipeline uses:
-
-- **BACI** (CEPII) bilateral trade flows, HS 2002 classification, 2002–2024, at 4 and 6 digits;
-- **AIPnet** product-level production network (Fetzer, Lambert, Feld and Garg, 2024);
-- **Penn World Table 11.0** for GDP per capita, plus OECD TiVA, World Bank and UNDP indicators for
-  the external validation.
-
-`src/preprocessing.py` turns the raw files into the binary matrices expected by the algorithms,
-stored under `data/HS02_all_years/{4,6}_digits/alligned/binarized/`.
-
-## Usage
-
-```bash
-pip install -r requirements.txt
-```
-
-```python
-from src.algorithms import compute_alpha
-from src.algorithms_with_imports import compute_extended_fitness_with_imports
-
-# M_export, M_import: binary country x product DataFrames (RCA >= 1)
-# C: binary product x product DataFrame, C[p', p] = 1 if p' is an input of p
-alpha = compute_alpha(C)          # alpha = 1 / rho(C), i.e. a = 1
-Q, F, QC, Delta, S = compute_extended_fitness_with_imports(
-    M_export, M_import, C.T, alpha=alpha, tensor_window=3, tol=1e-6, track_convergence=False)
-```
-
-`Q` is the product complexity (with its input part `QC` and intrinsic part `Delta`), `F` the
-country fitness and `S` the import penalty.
+- **Requirements:** Python 3 with NumPy, pandas, SciPy, Matplotlib, PyArrow (`pip install -r requirements.txt`).
+- **Run:** the notebooks in `data_generation/`, then those in `plotting/` and `econometrics/`.
+- **Data:** not included (size and licences). BACI trade flows (CEPII, HS 2002, 2002–2024), the
+  AIPnet production network (Fetzer et al., 2024), Penn World Table 11.0, OECD TiVA.
 
 ## Author
 
