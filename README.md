@@ -31,7 +31,7 @@ $$
 \begin{aligned}
 \bar{F}^{(n+1)} &= \phi_X\big(Q^{(n)}\big) - S^{(n)} && \text{country score, minus imported input complexity}\\
 \bar{\Delta}^{(n)} &= \Theta_X\big(F^{(n)}\big) && \text{intrinsic complexity (as in ECI / Fitness)}\\
-\bar{Q}^{(n+1)} &= Q^{(n)} \, \alpha C + \Delta^{(n)} && \text{product complexity = intrinsic + inherited from inputs}
+\bar{Q}^{(n+1)} &= \alpha Q^{(n)} C + \Delta^{(n)} && \text{product complexity = intrinsic + inherited from inputs}
 \end{aligned}
 $$
 
@@ -45,7 +45,7 @@ $S = 0$ the classical algorithms are recovered exactly.
 
 - **Theory.** At the fixed point the product complexity is a *personalised Katz centrality* of the
   production network: each product accumulates the intrinsic complexity of all the supply chains
-  that flow into it, damped at every step upstream. The dimensionless parameter $a = \alpha\,\rho(C)$
+  that flow into it, damped at every step upstream. The dimensionless parameter $a = \alpha \rho(C)$
   makes the propagation strength comparable across networks; with $a = 1$ intrinsic and input
   complexity have comparable weight.
 - **Numerics.** Extended Fitness converges in a few tens of iterations and keeps scores away from
